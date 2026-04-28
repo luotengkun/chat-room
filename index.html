@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>双人聊天室</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); height: 100vh; display: flex; justify-content: center; align-items: center; }
+
+/* 登录界面 */
+#login-screen {
+  background: rgba(255,255,255,0.05); backdrop-filter: blur(20px);
+  border-radius: 20px; padding: 40px; width: 380px; text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+}
+#login-screen h1 { color: #fff; font-size: 24px; margin-bottom: 8px; }
+#login-screen p { color: rgba(255,255,255,0.6); font-size: 14px; margin-bottom: 24px; }
+#login-screen input {
+  width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.08); color: #fff; font-size: 15px; outline: none; margin-bottom: 16px;
+  transition: border-color 0.3s;
+}
+#login-screen input::placeholder { color: rgba(255,255,255,0.35); }
+#login-screen input:focus { border-color: #6c63ff; }
+#login-screen button {
+  width: 100%; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(135deg, #6c63ff, #3f8efc);
+  color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+}
+#login-screen button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(108,99,255,0.4); }
+.room-info {
+  margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px;
+  display: flex; align-items: center; gap: 8px; justify-content: center;
+}
+.room-info span { color: rgba(255,255,255,0.5); font-size: 13px; }
+.room-info code { color: #6c63ff; font-size: 13px; background: rgba(108,99,255,0.15); padding: 2px 8px; border-radius: 6px; }
+.copy-btn {
+  background: none; border: none; color: #6c63ff; cursor: pointer; font-size: 13px; text-decoration: underline;
+}
+
+/* 聊天界面 */
+#chat-screen {
+  display: none; width: 100%; max-width: 700px; height: 100vh; max-height: 100vh;
+  background: #1a1a2e; flex-direction: column;
+}
+#chat-header {
+  padding: 16px 20px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; justify-content: space-between;
+}
+#chat-header h2 { color: #fff; font-size: 16px; }
+#chat-header .status { font-size: 12px; color: rgba(255,255,255,0.5); }
+#chat-header .status.online { color: #4ade80; }
+#chat-header .status.offline { color: rgba(255,255,255,0.3); }
+.user-count {
+  background: rgba(108,99,255,0.2); color: #a5a0ff; padding: 4px 12px; border-radius: 20px; font-size: 12px;
+}
+
+/* 消息区域 */
+#messages {
+  flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+#messages::-webkit-scrollbar { width: 6px; }
+#messages::-webkit-scrollbar-track { background: transparent; }
+#messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+.msg { max-width: 75%; animation: fadeIn 0.3s ease; }
+.msg.mine { align-self: flex-end; }
+.msg.other { align-self: flex-start; }
+
+.msg .bubble {
+  padding: 10px 16px; border-radius: 18px; font-size: 14px; line-height: 1.6; word-break: break-word;
+}
+.msg.mine .bubble { background: linear-gradient(135deg, #6c63ff, #3f8efc); color: #fff; border-bottom-right-radius: 6px; }
+.msg.other .bubble { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9); border-bottom-left-radius: 6px; }
+.msg .name { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 4px; padding-left: 4px; }
+.msg .time { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 4px; text-align: right; padding-right: 4px; }
+.msg.other .time { text-align: left; padding-left: 4px; }
+
+.system-msg {
+  align-self: center; font-size: 12px; color: rgba(255,255,255,0.3);
+  padding: 4px 14px; background: rgba(255,255,255,0.03); border-radius: 10px;
+}
+
+/* 输入区域 */
+#input-area {
+  padding: 16px 20px; background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex; gap: 10px; align-items: flex-end;
+}
+#msg-input {
+  flex: 1; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.06); color: #fff; font-size: 14px; outline: none; resize: none;
+  max-height: 120px; line-height: 1.5; font-family: inherit;
+}
+#msg-input::placeholder { color: rgba(255,255,255,0.25); }
+#msg-input:focus { border-color: #6c63ff; }
+#send-btn {
+  width: 44px; height: 44px; border-radius: 14px; border: none;
+  background: linear-gradient(135deg, #6c63ff, #3f8efc); color: #fff;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s; flex-shrink: 0;
+}
+#send-btn:hover { transform: scale(1.05); }
+#send-btn svg { width: 20px; height: 20px; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- 登录界面 -->
+<div id="login-screen">
+  <h1>双人聊天室</h1>
+  <p>输入昵称，分享房间号给好友即可开始聊天</p>
+  <input type="text" id="nickname" placeholder="输入你的昵称" maxlength="12" autofocus>
+  <input type="text" id="room-id" placeholder="房间号（留空自动生成）" maxlength="20">
+  <button onclick="joinRoom()">进入聊天室</button>
+  <div class="room-info">
+    <span>房间号：</span>
+    <code id="display-room"></code>
+    <button class="copy-btn" onclick="copyRoom()">复制</button>
+  </div>
+</div>
+
+<!-- 聊天界面 -->
+<div id="chat-screen">
+  <div id="chat-header">
+    <div>
+      <h2 id="room-title">聊天室</h2>
+      <span class="status" id="status-text">等待对方加入...</span>
+    </div>
+    <span class="user-count" id="user-count">1 人在线</span>
+  </div>
+  <div id="messages"></div>
+  <div id="input-area">
+    <textarea id="msg-input" rows="1" placeholder="输入消息，Enter 发送..." onkeydown="handleKey(event)"></textarea>
+    <button id="send-btn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// ============ 配置 ============
+// 使用免费的 PeerJS 服务做信令，WebRTC 做 P2P 通信
+const PEERJS_CLOUD_HOST = '0.peerjs.com';
+const PEERJS_CLOUD_PORT = 443;
+
+let peer, conn, myName, roomId;
+const messagesEl = document.getElementById('messages');
+
+// 生成短房间号
+function genRoomId() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let id = '';
+  for (let i = 0; i < 6; i++) id += chars[Math.floor(Math.random() * chars.length)];
+  return id;
+}
+
+// 加入房间
+function joinRoom() {
+  myName = document.getElementById('nickname').value.trim();
+  if (!myName) { document.getElementById('nickname').focus(); return; }
+
+  roomId = document.getElementById('room-id').value.trim().toUpperCase() || genRoomId();
+  document.getElementById('display-room').textContent = roomId;
+
+  // 创建 PeerJS 实例
+  peer = new Peer('chat-' + roomId, {
+    host: PEERJS_CLOUD_HOST, port: PEERJS_CLOUD_PORT, secure: true,
+    debug: 0
+  });
+
+  peer.on('open', function(id) {
+    // 是房间创建者，等待对方连接
+    peer.on('connection', function(connection) {
+      conn = connection;
+      setupConnection();
+    });
+    switchToChat();
+    addSystemMsg('房间已创建，将房间号 ' + roomId + ' 发给好友即可开始聊天');
+  });
+
+  peer.on('error', function(err) {
+    if (err.type === 'unavailable-id') {
+      // 房间已存在，作为第二个用户加入
+      peer = new Peer(undefined, {
+        host: PEERJS_CLOUD_HOST, port: PEERJS_CLOUD_PORT, secure: true, debug: 0
+      });
+      peer.on('open', function() {
+        conn = peer.connect('chat-' + roomId, { reliable: true });
+        setupConnection();
+        switchToChat();
+      });
+    } else {
+      addSystemMsg('连接失败：' + err.type);
+    }
+  });
+}
+
+function setupConnection() {
+  conn.on('open', function() {
+    addSystemMsg('已连接！');
+    conn.send({ type: 'join', name: myName });
+    updateStatus(true);
+  });
+  conn.on('data', function(data) {
+    if (data.type === 'join') {
+      addSystemMsg(data.name + ' 加入了聊天');
+      updateStatus(true);
+    } else if (data.type === 'msg') {
+      addMessage(data.name, data.text, data.time, false);
+    } else if (data.type === 'leave') {
+      addSystemMsg(data.name + ' 离开了聊天');
+      updateStatus(false);
+    } else if (data.type === 'typing') {
+      updateTyping(data.name);
+    }
+  });
+  conn.on('close', function() {
+    addSystemMsg('对方已断开连接');
+    updateStatus(false);
+  });
+}
+
+function switchToChat() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('chat-screen').style.display = 'flex';
+  document.getElementById('room-title').textContent = '房间 ' + roomId;
+}
+
+// 发送消息
+function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text || !conn || !conn.open) return;
+
+  const time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  conn.send({ type: 'msg', name: myName, text: text, time: time });
+  addMessage(myName, text, time, true);
+  input.value = '';
+  input.style.height = 'auto';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+// 添加消息气泡
+function addMessage(name, text, time, isMine) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + (isMine ? 'mine' : 'other');
+  div.innerHTML =
+    (!isMine ? '<div class="name">' + escHtml(name) + '</div>' : '') +
+    '<div class="bubble">' + escHtml(text).replace(/\n/g, '<br>') + '</div>' +
+    '<div class="time">' + time + '</div>';
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function addSystemMsg(text) {
+  const div = document.createElement('div');
+  div.className = 'system-msg';
+  div.textContent = text;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function updateStatus(online) {
+  const el = document.getElementById('status-text');
+  if (online) { el.textContent = '已连接'; el.className = 'status online'; }
+  else { el.textContent = '等待对方加入...'; el.className = 'status offline'; }
+}
+
+function updateTyping(name) {
+  const el = document.getElementById('status-text');
+  el.textContent = name + ' 正在输入...';
+  el.className = 'status online';
+  clearTimeout(window._typingTimer);
+  window._typingTimer = setTimeout(() => { el.textContent = '已连接'; }, 2000);
+}
+
+function escHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function copyRoom() {
+  const text = roomId;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '已复制!';
+    setTimeout(() => btn.textContent = '复制', 1500);
+  });
+}
+
+// 输入框自动调高
+document.getElementById('msg-input').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+// 回车直接加入房间
+document.getElementById('nickname').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { document.getElementById('room-id').focus(); }
+});
+document.getElementById('room-id').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') joinRoom();
+});
+
+// 页面关闭通知对方
+window.addEventListener('beforeunload', function() {
+  if (conn && conn.open) conn.send({ type: 'leave', name: myName });
+});
+</script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</body>
+</html>
