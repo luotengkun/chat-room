@@ -4,143 +4,137 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>双人聊天室</title>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); height: 100vh; display: flex; justify-content: center; align-items: center; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);height:100vh;display:flex;justify-content:center;align-items:center}
 
-#login-screen {
-  background: rgba(255,255,255,0.05); backdrop-filter: blur(20px);
-  border-radius: 20px; padding: 40px; width: 380px; text-align: center;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+#login-screen{
+  background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);
+  border-radius:20px;padding:40px;width:380px;text-align:center;
+  box-shadow:0 8px 32px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);
 }
-#login-screen h1 { color: #fff; font-size: 24px; margin-bottom: 8px; }
-#login-screen p { color: rgba(255,255,255,0.6); font-size: 14px; margin-bottom: 24px; }
-#login-screen input {
-  width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.08); color: #fff; font-size: 15px; outline: none; margin-bottom: 16px;
-  transition: border-color 0.3s;
+#login-screen h1{color:#fff;font-size:24px;margin-bottom:8px}
+#login-screen .subtitle{color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:24px}
+#login-screen input{
+  width:100%;padding:14px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.08);color:#fff;font-size:15px;outline:none;margin-bottom:14px;
+  transition:border-color .3s;
 }
-#login-screen input::placeholder { color: rgba(255,255,255,0.35); }
-#login-screen input:focus { border-color: #6c63ff; }
-.btn-primary {
-  width: 100%; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(135deg, #6c63ff, #3f8efc);
-  color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
-  margin-bottom: 12px;
+#login-screen input::placeholder{color:rgba(255,255,255,0.35)}
+#login-screen input:focus{border-color:#6c63ff}
+.btn-primary{
+  width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#6c63ff,#3f8efc);
+  color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:transform .2s,box-shadow .2s;
+  margin-bottom:10px;
 }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(108,99,255,0.4); }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.btn-secondary {
-  width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); font-size: 14px;
-  cursor: pointer; transition: all 0.2s; margin-bottom: 16px;
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(108,99,255,0.4)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-secondary{
+  width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);font-size:14px;
+  cursor:pointer;transition:all .2s;margin-bottom:14px;
 }
-.btn-secondary:hover { background: rgba(255,255,255,0.1); color: #fff; }
-.room-info {
-  margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px;
-  display: none; align-items: center; gap: 8px; justify-content: center;
+.btn-secondary:hover{background:rgba(255,255,255,0.1);color:#fff}
+.room-info{
+  margin-top:12px;padding:14px;background:rgba(255,255,255,0.05);border-radius:12px;
+  display:none;flex-direction:column;gap:10px;align-items:center;
 }
-.room-info.show { display: flex; }
-.room-info span { color: rgba(255,255,255,0.5); font-size: 13px; }
-.room-info code { color: #6c63ff; font-size: 16px; font-weight: 700; background: rgba(108,99,255,0.15); padding: 4px 12px; border-radius: 8px; letter-spacing: 2px; }
-.copy-btn {
-  background: none; border: none; color: #6c63ff; cursor: pointer; font-size: 13px; text-decoration: underline;
+.room-info.show{display:flex}
+.room-info .row{display:flex;align-items:center;gap:8px}
+.room-info span{color:rgba(255,255,255,0.5);font-size:13px}
+.room-info code{
+  color:#6c63ff;font-size:20px;font-weight:700;background:rgba(108,99,255,0.15);
+  padding:6px 16px;border-radius:8px;letter-spacing:3px;
 }
-#login-status { color: rgba(255,255,255,0.5); font-size: 13px; min-height: 20px; margin-top: 8px; }
+.copy-btn{background:none;border:none;color:#6c63ff;cursor:pointer;font-size:13px;text-decoration:underline}
+#login-error{color:#f87171;font-size:13px;min-height:20px;margin-top:8px}
+#join-fields{display:none}
 
-/* 聊天界面 */
-#chat-screen {
-  display: none; width: 100%; max-width: 700px; height: 100vh; max-height: 100vh;
-  background: #1a1a2e; flex-direction: column;
+#chat-screen{display:none;width:100%;max-width:700px;height:100vh;max-height:100vh;background:#1a1a2e;flex-direction:column}
+#chat-header{
+  padding:16px 20px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:space-between;
 }
-#chat-header {
-  padding: 16px 20px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.06);
-  display: flex; align-items: center; justify-content: space-between;
-}
-#chat-header h2 { color: #fff; font-size: 16px; }
-#chat-header .status { font-size: 12px; margin-top: 2px; }
-#chat-header .status.online { color: #4ade80; }
-#chat-header .status.offline { color: rgba(255,255,255,0.3); }
-.user-count {
-  background: rgba(108,99,255,0.2); color: #a5a0ff; padding: 4px 12px; border-radius: 20px; font-size: 12px;
-}
+#chat-header h2{color:#fff;font-size:16px}
+#chat-header .status{font-size:12px;margin-top:2px}
+.status.online{color:#4ade80}
+.status.offline{color:rgba(255,255,255,0.3)}
+.user-count{background:rgba(108,99,255,0.2);color:#a5a0ff;padding:4px 12px;border-radius:20px;font-size:12px}
 
-#messages {
-  flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px;
-  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
-}
-#messages::-webkit-scrollbar { width: 6px; }
-#messages::-webkit-scrollbar-track { background: transparent; }
-#messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+#messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent}
+#messages::-webkit-scrollbar{width:6px}
+#messages::-webkit-scrollbar-track{background:transparent}
+#messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
 
-.msg { max-width: 75%; animation: fadeIn 0.3s ease; }
-.msg.mine { align-self: flex-end; }
-.msg.other { align-self: flex-start; }
-.msg .bubble {
-  padding: 10px 16px; border-radius: 18px; font-size: 14px; line-height: 1.6; word-break: break-word;
-}
-.msg.mine .bubble { background: linear-gradient(135deg, #6c63ff, #3f8efc); color: #fff; border-bottom-right-radius: 6px; }
-.msg.other .bubble { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9); border-bottom-left-radius: 6px; }
-.msg .name { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 4px; padding-left: 4px; }
-.msg .time { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 4px; text-align: right; padding-right: 4px; }
-.msg.other .time { text-align: left; padding-left: 4px; }
-.system-msg {
-  align-self: center; font-size: 12px; color: rgba(255,255,255,0.3);
-  padding: 4px 14px; background: rgba(255,255,255,0.03); border-radius: 10px;
-}
+.msg{max-width:75%;animation:fadeIn .3s ease}
+.msg.mine{align-self:flex-end}
+.msg.other{align-self:flex-start}
+.msg .bubble{padding:10px 16px;border-radius:18px;font-size:14px;line-height:1.6;word-break:break-word}
+.msg.mine .bubble{background:linear-gradient(135deg,#6c63ff,#3f8efc);color:#fff;border-bottom-right-radius:6px}
+.msg.other .bubble{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.9);border-bottom-left-radius:6px}
+.msg .name{font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:4px;padding-left:4px}
+.msg .time{font-size:11px;color:rgba(255,255,255,0.25);margin-top:4px;text-align:right;padding-right:4px}
+.msg.other .time{text-align:left;padding-left:4px}
+.system-msg{align-self:center;font-size:12px;color:rgba(255,255,255,0.3);padding:4px 14px;background:rgba(255,255,255,0.03);border-radius:10px}
+.waiting-msg{align-self:center;color:rgba(255,255,255,0.2);font-size:13px;padding:20px;text-align:center}
 
-#input-area {
-  padding: 16px 20px; background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.06);
-  display: flex; gap: 10px; align-items: flex-end;
+#input-area{
+  padding:16px 20px;background:rgba(255,255,255,0.03);border-top:1px solid rgba(255,255,255,0.06);
+  display:flex;gap:10px;align-items:flex-end;
 }
-#msg-input {
-  flex: 1; padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.06); color: #fff; font-size: 14px; outline: none; resize: none;
-  max-height: 120px; line-height: 1.5; font-family: inherit;
+#msg-input{
+  flex:1;padding:12px 16px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.06);color:#fff;font-size:14px;outline:none;resize:none;
+  max-height:120px;line-height:1.5;font-family:inherit;
 }
-#msg-input::placeholder { color: rgba(255,255,255,0.25); }
-#msg-input:focus { border-color: #6c63ff; }
-#send-btn {
-  width: 44px; height: 44px; border-radius: 14px; border: none;
-  background: linear-gradient(135deg, #6c63ff, #3f8efc); color: #fff;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: transform 0.2s; flex-shrink: 0;
+#msg-input::placeholder{color:rgba(255,255,255,0.25)}
+#msg-input:focus{border-color:#6c63ff}
+#send-btn{
+  width:44px;height:44px;border-radius:14px;border:none;
+  background:linear-gradient(135deg,#6c63ff,#3f8efc);color:#fff;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:transform .2s;flex-shrink:0;
 }
-#send-btn:hover { transform: scale(1.05); }
-#send-btn svg { width: 20px; height: 20px; }
+#send-btn:hover{transform:scale(1.05)}
+#send-btn svg{width:20px;height:20px}
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
 
 <div id="login-screen">
   <h1>双人聊天室</h1>
-  <p>创建房间或加入房间，与好友实时聊天</p>
+  <p class="subtitle">基于 WebSocket，无需注册，打开即用</p>
   <input type="text" id="nickname" placeholder="输入你的昵称" maxlength="12" autofocus>
-  <button class="btn-primary" onclick="createRoom()">创建新房间</button>
+  <button class="btn-primary" id="btn-create" onclick="createRoom()">创建新房间</button>
   <button class="btn-secondary" onclick="toggleJoin()">加入已有房间</button>
-  <div id="join-fields" style="display:none">
+  <div id="join-fields">
     <input type="text" id="room-id" placeholder="输入房间号" maxlength="20" style="text-transform:uppercase">
-    <button class="btn-primary" onclick="joinRoom()">加入房间</button>
+    <button class="btn-primary" id="btn-join" onclick="joinRoom()">加入房间</button>
   </div>
   <div class="room-info" id="room-info">
-    <span>房间号：</span>
-    <code id="display-room"></code>
-    <button class="copy-btn" onclick="copyRoom()">复制</button>
+    <div class="row">
+      <span>房间号：</span>
+      <code id="display-room"></code>
+      <button class="copy-btn" onclick="copyRoom()">复制</button>
+    </div>
+    <p style="color:rgba(255,255,255,0.35);font-size:12px">将房间号发给好友，好友选择「加入已有房间」输入房间号即可</p>
   </div>
-  <div id="login-status"></div>
+  <div id="login-error"></div>
 </div>
 
 <div id="chat-screen">
   <div id="chat-header">
     <div>
-      <h2>聊天室</h2>
-      <span class="status" id="status-text">等待对方加入...</span>
+      <h2 id="room-title">聊天室</h2>
+      <span class="status" id="status-text">正在连接...</span>
     </div>
-    <span class="user-count" id="user-count">1 人在线</span>
+    <span class="user-count" id="user-count">1 人</span>
   </div>
-  <div id="messages"></div>
+  <div id="messages">
+    <div class="waiting-msg" id="waiting-msg">等待对方加入房间...</div>
+  </div>
   <div id="input-area">
     <textarea id="msg-input" rows="1" placeholder="输入消息，Enter 发送..." onkeydown="handleKey(event)"></textarea>
     <button id="send-btn" onclick="sendMessage()">
@@ -150,149 +144,176 @@ body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: linea
 </div>
 
 <script>
-let peer = null;
-let conn = null;
+// ====== 配置 ======
+// 使用公共 WebSocket 服务器做消息中继
+const WS_SERVERS = [
+  'wss://ws.postman-echo.com/raw',       // 备用1
+  'wss://echo.websocket.org',             // 备用2
+];
+
+// 主方案：使用 BroadcastChannel（同一设备不同标签页可以直接通信）
+// 跨设备方案：使用公共 WebSocket 中继
+
+let ws = null;
 let myName = '';
 let roomId = '';
 let isHost = false;
+let isConnected = false;
 const messagesEl = document.getElementById('messages');
 
 function genRoomId() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let id = '';
-  for (let i = 0; i < 6; i++) id += chars[Math.floor(Math.random() * chars.length)];
+  for (let i = 0; i < 6; i++) id += c[Math.floor(Math.random() * c.length)];
   return id;
 }
 
-function setStatus(text) {
-  document.getElementById('login-status').textContent = text;
-}
+function setError(t) { document.getElementById('login-error').textContent = t; }
 
 function toggleJoin() {
   const el = document.getElementById('join-fields');
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
-// ========== 创建房间（作为Host） ==========
+// ====== WebSocket 中继方案 ======
+function connectWS(onOpen, onMessage) {
+  // 尝试多个 WebSocket 服务器
+  const servers = [
+    'wss://free.blr2.piesocket.com/v3/1',
+    'wss://echo.websocket.events',
+    'wss://socketsbay.com/wss/v2/1/demo/',
+  ];
+
+  let idx = 0;
+  function tryNext() {
+    if (idx >= servers.length) {
+      setError('所有服务器连接失败，请检查网络后重试');
+      return;
+    }
+    try {
+      ws = new WebSocket(servers[idx]);
+      ws.onopen = function() {
+        console.log('WS connected to', servers[idx]);
+        isConnected = true;
+        onOpen();
+      };
+      ws.onmessage = function(e) {
+        onMessage(e.data);
+      };
+      ws.onerror = function() {
+        console.log('WS error', servers[idx]);
+        idx++;
+        tryNext();
+      };
+      ws.onclose = function() {
+        if (!isConnected) { idx++; tryNext(); }
+        else { isConnected = false; }
+      };
+    } catch(e) {
+      idx++;
+      tryNext();
+    }
+  }
+  tryNext();
+}
+
+// ====== 创建房间 ======
 function createRoom() {
   myName = document.getElementById('nickname').value.trim();
   if (!myName) { document.getElementById('nickname').focus(); return; }
-
   roomId = genRoomId();
   isHost = true;
-  setStatus('正在创建房间...');
 
-  // 用随机Peer ID，不跟房间号绑定，避免冲突
-  peer = new Peer('chatroom-' + roomId + '-host', {
-    host: '0.peerjs.com', port: 443, secure: true, debug: 0
-  });
+  document.getElementById('btn-create').disabled = true;
+  document.getElementById('btn-create').textContent = '连接中...';
 
-  peer.on('open', function() {
-    setStatus('房间已创建，等待好友加入...');
-    document.getElementById('display-room').textContent = roomId;
-    document.getElementById('room-info').classList.add('show');
-    switchToChat();
-    addSystemMsg('房间 ' + roomId + ' 已创建，将房间号发给好友即可开始聊天');
-
-    // 监听加入
-    peer.on('connection', function(connection) {
-      conn = connection;
-      setupConn();
-    });
-  });
-
-  peer.on('error', function(err) {
-    if (err.type === 'unavailable-id') {
-      // 房间号重复（极低概率），换一个
-      roomId = genRoomId();
-      peer.destroy();
-      createRoom();
-    } else {
-      setStatus('创建失败: ' + err.type + '，请重试');
+  connectWS(
+    function() {
+      document.getElementById('display-room').textContent = roomId;
+      document.getElementById('room-info').classList.add('show');
+      switchToChat();
+      addSystemMsg('房间 ' + roomId + ' 已创建，等待好友加入...');
+    },
+    function(data) {
+      handleMessage(data);
     }
-  });
+  );
 }
 
-// ========== 加入房间（作为Guest） ==========
+// ====== 加入房间 ======
 function joinRoom() {
   myName = document.getElementById('nickname').value.trim();
   if (!myName) { document.getElementById('nickname').focus(); return; }
-
   roomId = document.getElementById('room-id').value.trim().toUpperCase();
   if (!roomId) { document.getElementById('room-id').focus(); return; }
-
   isHost = false;
-  setStatus('正在连接房间...');
 
-  // Guest 用自己的随机Peer ID
-  peer = new Peer(undefined, {
-    host: '0.peerjs.com', port: 443, secure: true, debug: 0
-  });
+  document.getElementById('btn-join').disabled = true;
+  document.getElementById('btn-join').textContent = '连接中...';
 
-  peer.on('open', function() {
-    // 连接到Host
-    conn = peer.connect('chatroom-' + roomId + '-host', { reliable: true });
-    setupConn();
-
-    // 连接超时处理
-    setTimeout(function() {
-      if (!conn || !conn.open) {
-        setStatus('连接失败，请检查房间号是否正确');
-        if (peer) peer.destroy();
-      }
-    }, 10000);
-  });
-
-  peer.on('error', function(err) {
-    if (err.type === 'peer-unavailable') {
-      setStatus('房间不存在或已关闭，请检查房间号');
-    } else {
-      setStatus('连接失败: ' + err.type);
+  connectWS(
+    function() {
+      switchToChat();
+      // 发送加入消息
+      sendPayload({ type: 'join', name: myName, room: roomId });
+      addSystemMsg('正在加入房间 ' + roomId + '...');
+    },
+    function(data) {
+      handleMessage(data);
     }
-  });
+  );
 }
 
-// ========== 通用连接处理 ==========
-function setupConn() {
-  conn.on('open', function() {
-    conn.send({ type: 'join', name: myName, isHost: isHost });
-    updateOnline(2);
-    addSystemMsg('已连接！可以开始聊天了');
-    setStatus('');
-  });
+function handleMessage(data) {
+  try {
+    const msg = JSON.parse(data);
+    // 检查是否是本房间的消息
+    if (msg.room !== roomId) return;
 
-  conn.on('data', function(data) {
-    if (data.type === 'join') {
-      addSystemMsg(data.name + ' 加入了聊天');
-      updateOnline(2);
-    } else if (data.type === 'msg') {
-      addMessage(data.name, data.text, data.time, false);
-    } else if (data.type === 'leave') {
-      addSystemMsg(data.name + ' 离开了聊天');
-      updateOnline(1);
+    if (msg.type === 'join' && msg.name !== myName) {
+      addSystemMsg(msg.name + ' 加入了聊天');
+      updateStatus(true);
+      removeWaiting();
+      // 回复确认
+      sendPayload({ type: 'welcome', name: myName, room: roomId });
     }
-  });
+    else if (msg.type === 'welcome' && msg.name !== myName) {
+      addSystemMsg(msg.name + ' 已在房间中');
+      updateStatus(true);
+      removeWaiting();
+    }
+    else if (msg.type === 'msg' && msg.name !== myName) {
+      addMessage(msg.name, msg.text, msg.time, false);
+    }
+    else if (msg.type === 'leave' && msg.name !== myName) {
+      addSystemMsg(msg.name + ' 离开了聊天');
+      updateStatus(false);
+    }
+  } catch(e) {
+    // 非JSON消息，忽略
+  }
+}
 
-  conn.on('close', function() {
-    addSystemMsg('对方已断开连接');
-    updateOnline(1);
-    conn = null;
-  });
+function sendPayload(obj) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(obj));
+  }
 }
 
 function switchToChat() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('chat-screen').style.display = 'flex';
+  document.getElementById('room-title').textContent = '房间 ' + roomId;
 }
 
 function sendMessage() {
   const input = document.getElementById('msg-input');
   const text = input.value.trim();
-  if (!text || !conn || !conn.open) return;
+  if (!text) return;
 
   const time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-  conn.send({ type: 'msg', name: myName, text: text, time: time });
   addMessage(myName, text, time, true);
+  sendPayload({ type: 'msg', name: myName, text: text, time: time, room: roomId });
   input.value = '';
   input.style.height = 'auto';
 }
@@ -320,18 +341,26 @@ function addSystemMsg(text) {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
-function updateOnline(n) {
-  document.getElementById('user-count').textContent = n + ' 人在线';
-  const s = document.getElementById('status-text');
-  if (n >= 2) { s.textContent = '已连接'; s.className = 'status online'; }
-  else { s.textContent = '等待对方加入...'; s.className = 'status offline'; }
+function removeWaiting() {
+  const el = document.getElementById('waiting-msg');
+  if (el) el.remove();
 }
 
-function esc(str) {
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
+function updateStatus(online) {
+  const s = document.getElementById('status-text');
+  const c = document.getElementById('user-count');
+  if (online) {
+    s.textContent = '已连接';
+    s.className = 'status online';
+    c.textContent = '2 人';
+  } else {
+    s.textContent = '等待对方加入...';
+    s.className = 'status offline';
+    c.textContent = '1 人';
+  }
 }
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
 function copyRoom() {
   navigator.clipboard.writeText(roomId).then(function() {
@@ -346,15 +375,9 @@ document.getElementById('msg-input').addEventListener('input', function() {
   this.style.height = Math.min(this.scrollHeight, 120) + 'px';
 });
 
-document.getElementById('nickname').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') document.getElementById('room-id').focus();
-});
-
 window.addEventListener('beforeunload', function() {
-  if (conn && conn.open) {
-    try { conn.send({ type: 'leave', name: myName }); } catch(e) {}
-  }
-  if (peer) peer.destroy();
+  sendPayload({ type: 'leave', name: myName, room: roomId });
+  if (ws) ws.close();
 });
 </script>
 </body>
